@@ -1,0 +1,36 @@
+{
+  "chat.chatHandler.send": {
+    "required string rid": 1,
+    "required string content": 2,
+    "required string from": 3,
+    "required string target": 4
+  },
+
+  "chat.chatHandler.request": {
+    "required string uid": 1,
+    "required string content": 2,
+    "message Payload": {
+      "required string part": 1,
+      "required string method": 2,
+      "message Data": {
+        "optional string rid": 1,
+        "optional string seat": 2,
+        "optional string chip": 3
+      },
+      "optional Data data": 3
+    },
+    "required Payload payload": 3
+  },
+
+  "connector.entryHandler.enter": {
+    "required string username": 1,
+    "required string rid": 2,
+    "required string hostFlag":3
+  },
+
+  "gate.gateHandler.queryEntry": {
+    "required string uid": 1
+  }
+}
+
+
