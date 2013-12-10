@@ -6,7 +6,7 @@
     "required string target": 4
   },
 
-  "chat.chatHandler.request": {
+  "game.chatHandler.request": {
     "required string uid": 1,
     "required string content": 2,
     "message Payload": {

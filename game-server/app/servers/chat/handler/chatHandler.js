@@ -1,6 +1,3 @@
-var table = require('../poker/table');
-var room = require('../poker/room');
-
 module.exports = function(app) {
 	return new Handler(app);
 };
@@ -10,23 +7,6 @@ var Handler = function(app) {
 };
 
 var handler = Handler.prototype;
-
-
-handler.request = function (msg, session, next) {//console.log('ChatHandler.request(): msg=' + msg.toString() + ', session=' + session.toString);
-    switch (msg.payload.part) {
-        case 'room':
-            room.request(this.app, msg, session);
-            break;
-        case 'game':
-            table.request(this.app, msg, session);
-            break;
-        default :
-            break;
-    }
-    next(null, {
-        route: msg.route
-    });
-};
 
 /**
  * Send messages to users

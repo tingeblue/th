@@ -12,6 +12,24 @@
 
   "onAdd": {
     "required string user": 1
+  },
+
+  "onSeat": {
+    "required string user": 1,
+    "required string seatId": 2
+  },
+
+  "onUnseat": {
+    "required string user": 1,
+    "required string seatId": 2
+  },
+
+  "onAction": {
+    "required string user": 1,
+    "required string seatId": 2,
+    "required string action": 3,
+    "required string chip": 4,
+    "required string allin": 5
   }
 }
 

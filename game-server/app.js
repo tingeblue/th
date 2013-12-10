@@ -61,6 +61,12 @@ app.configure('production|development', 'chat', function() {
   app.filter(abuseFilter());
 });
 
+app.configure('production|development', function() {
+    // route configures
+    app.route('game', gameRoute);
+    app.filter(pomelo.timeout());
+});
+
 //app.registerAdmin(timeReport, {app: app});
 
 // start app

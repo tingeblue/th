@@ -57,6 +57,14 @@ handler.enter = function(msg, session, next) {console.log('EntryHandler.enter():
 			users:users
 		});
 	});
+
+    //put user into game channel
+    self.app.rpc.game.gameRemote.add(session, uid, self.app.get('serverId'), rid, true, function(users){
+        next(null, {
+            rid:rid,
+            users:users
+        });
+    });
 };
 
 /**
@@ -71,4 +79,6 @@ var onUserLeave = function(app, session) {console.log('EntryHandler.onUserLeave(
 		return;
 	}
 	app.rpc.chat.chatRemote.kick(session, session.uid, app.get('serverId'), session.get('rid'), null);
+
+    app.rpc.game.gameRemote.kick(session, session.uid, app.get('serverId'), session.get('rid'), null);
 };
