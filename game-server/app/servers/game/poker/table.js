@@ -5,7 +5,10 @@ var Player = require('./player');
 /**
  * Created by slee on 2013. 12. 2..
  */
-var Table = function () {
+var Table = function (app, rid, hostUsername) {
+    this.app = app;
+    this.rid = rid;
+    this.hostUsername = hostUsername;
     this.turn = new Turn();
     this.pot = new Pot();
     this.step = new Step();
@@ -13,15 +16,58 @@ var Table = function () {
     this.players = {};
 
     // 스텝 진행에 따른 처리함수 등록
-    this.step.register(Step.READY, this.ready);
-    this.step.register(Step.PREFLOP, this.preflop);
-    this.step.register(Step.FLOP, this.flop);
-    this.step.register(Step.TURN, this.turn);
-    this.step.register(Step.RIVER, this.river);
-    this.step.register(Step.SHOWDOWN, this.showdown);
+    this.step.register(this, Step.READY, this.ready);
+    this.step.register(this, Step.PREFLOP, this.preflop);
+    this.step.register(this, Step.FLOP, this.flop);
+    this.step.register(this, Step.TURN, this.turn);
+    this.step.register(this, Step.RIVER, this.river);
+    this.step.register(this, Step.SHOWDOWN, this.showdown);
 };
 
 var table = Table.prototype;
+
+/**
+ * 방 안에 있는 모든 플레이어에게 전송
+ * @param username
+ * @param msg
+ */
+table.broadcast = function (username, msg) {
+    if (this.app === null) return;
+
+    var channelService = this.app.get('channelService');
+    var param = {
+        msg: msg,
+        from: username,
+        target: '*'
+    };
+    channel = channelService.getChannel(this.rid, false);
+
+    channel.pushMessage('onBroadcast', param);
+};
+
+/**
+ * 지정된 특정 플레이어에게 전송
+ * @param username
+ * @param target
+ * @param msg
+ */
+table.send = function (username, target, msg) {
+    if (this.app === null) return;
+
+    var channelService = this.app.get('channelService');
+    var param = {
+        msg: msg,
+        from: username,
+        target: target
+    };
+
+    var tuid = target + '*' + this.rid;
+    var tsid = channel.getMember(tuid)['sid'];
+    channelService.pushMessageByUids('onBroadcast', param, [{
+        uid: tuid,
+        sid: tsid
+    }]);
+};
 
 /**
  * 모든 플레이어들을 내보낸다.
@@ -150,27 +196,35 @@ table.action = function (uid, data) {
 };
 
 
-table.ready = function () {
+table.ready = function () {console.log('Table.ready()');
+    this.turn.rotateDealer();
+};
+
+table.preflop = function () {console.log('Table.preflop()');
+    this.turn.setBlind();
+
+    var msg = {
+        smallBlind: this.turn.smallBlind,
+        bigBlind: this.turn.bigBlind,
+        cummunityCards: {}
+    };
+
+    this.broadcast(this.hostUsername, msg);
+};
+
+table.flop = function () {console.log('Table.flop()');
 
 };
 
-table.preflop = function () {
+table.turn = function () {console.log('Table.turn()');
 
 };
 
-table.flop = function () {
+table.river = function () {console.log('Table.river()');
 
 };
 
-table.turn = function () {
-
-};
-
-table.river = function () {
-
-};
-
-table.showdown = function () {
+table.showdown = function () {console.log('Table.showdown()');
 
 };
 
@@ -220,7 +274,8 @@ module.exports = (function () {
             }
             else {
                 if (msg.payload.method === 'create') {
-                    tables[rid] = new Table();
+                    var username = session.uid.split('*')[0];
+                    tables[rid] = new Table(app, rid, username);
                     tables[rid].enter(msg.uid);
                 }
                 else {
@@ -236,31 +291,37 @@ module.exports = (function () {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Unit test
-var assert = require("assert");
+if (process.env.UNITTEST === 'true') {
+    var assert = require("assert");
 
-describe('Turn', function(){
-    var PLAYER_1 = "1";
-    var PLAYER_2 = "2";
-    var PLAYER_3 = "3";
+    describe('Table', function(){
+        var PLAYER_1 = "1";
+        var PLAYER_2 = "2";
+        var PLAYER_3 = "3";
 
-    // 두명으로 기본 플레이
-    describe('basic play', function(){
-        var table = new Table();
-        table.enter(PLAYER_1);
-        table.enter(PLAYER_2);
-        table.seat(PLAYER_1, 1);
-        table.seat(PLAYER_1, 2);
+        var t = new Table(null, 0, 'noname');
+        t.enter(PLAYER_1);
+        t.enter(PLAYER_2);
+        t.seat(PLAYER_1, 1);
+        t.seat(PLAYER_1, 2);
 
-        it('자리에 플레이어들을 추가/삭제 시 -1이 아니어야 한다.', function(){
+        // 두명으로 기본 플레이
+        describe('basic play', function(){
+            t.ready();
+            t.step.start();
 
+            it('자리에 플레이어들을 추가/삭제 시 -1이 아니어야 한다.', function(){
+                assert.equal(t.turn.smallBlind, 1);
+                assert.equal(t.turn.bigBlind, 2);
+            });
         });
+
+        // 두명의 플레이하고 체크로 넘어가는 경우
+
+        // 두명이 플레이중 한명이 Fold한 경우
+
+        // 두명이 플레이중 한명이 올인한 경우(Raise)
+
+        // 두명이 플레이중 한명이 올인한 경우(Call)
     });
-
-    // 두명의 플레이하고 체크로 넘어가는 경우
-
-    // 두명이 플레이중 한명이 Fold한 경우
-
-    // 두명이 플레이중 한명이 올인한 경우(Raise)
-
-    // 두명이 플레이중 한명이 올인한 경우(Call)
-});
+}

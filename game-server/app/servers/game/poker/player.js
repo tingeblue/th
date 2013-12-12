@@ -83,34 +83,36 @@ player.winChip = function (chip) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Unit test
-var assert = require("assert");
+if (process.env.UNITTEST === 'true') {
+    var assert = require("assert");
 
-describe('Player', function(){
-    var p = new Player('1');
+    describe('Player', function(){
+        var p = new Player('1');
 
-    describe('buyChip()', function(){
-        it('추가된 칩이 정확해야 한다.', function(){
-            p.buyChip(5);
-            assert.equal(5, p.chip);
+        describe('buyChip()', function(){
+            it('추가된 칩이 정확해야 한다.', function(){
+                p.buyChip(5);
+                assert.equal(5, p.chip);
+            });
+        });
+
+        describe('betChip()', function(){
+            it('스텝 진행이 정확해야 한다.', function(){
+                p.betChip(3);
+                assert.equal(2, p.chip);
+            });
+        });
+
+        describe('winChip()', function(){
+            it('스텝 진행이 정확해야 한다.', function(){
+                p.winChip(5);
+                assert.equal(7, p.chip);
+            });
+        });
+
+        describe('action()', function(){
+            it('스텝 진행이 정확해야 한다.', function(){
+            });
         });
     });
-
-    describe('betChip()', function(){
-        it('스텝 진행이 정확해야 한다.', function(){
-            p.betChip(3);
-            assert.equal(2, p.chip);
-        });
-    });
-
-    describe('winChip()', function(){
-        it('스텝 진행이 정확해야 한다.', function(){
-            p.winChip(5);
-            assert.equal(7, p.chip);
-        });
-    });
-
-    describe('action()', function(){
-        it('스텝 진행이 정확해야 한다.', function(){
-        });
-    });
-});
+}

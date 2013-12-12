@@ -35,8 +35,15 @@ var step = Step.prototype;
  * @param stepId
  * @param fn
  */
-step.register = function (stepId, fn) {
-    this.stepFn[stepId] = fn;
+step.register = function (obj, stepId, fn) {
+    this.stepFn[stepId] = function () {
+        return fn && fn.apply(obj);
+    };
+};
+
+step.start = function () {
+    this.step = Step.READY;
+    this.proceedNext();
 };
 
 /**
@@ -58,32 +65,38 @@ step.proceedNext = function () {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Unit test
-var assert = require("assert");
+if (process.env.UNITTEST === 'true') {
+    var assert = require("assert");
 
-describe('Step', function(){
-    var s = new Step();
-    s.register(Step.READY, function () {console.log('Ready Step.'); return Step.READY;});
-    s.register(Step.PREFLOP, function () {console.log('PreFlop Step.'); return Step.PREFLOP;});
-    s.register(Step.FLOP, function () {console.log('Flop Step.'); return Step.FLOP;});
-    s.register(Step.TURN, function () {console.log('Turn Step.'); return Step.TURN;});
-    s.register(Step.RIVER, function () {console.log('River Step.'); return Step.RIVER;});
-    s.register(Step.SHOWDOWN, function () {console.log('Showdown Step.'); return Step.SHOWDOWN;});
+    describe('Step', function(){
+        var s = new Step();
+        s.register(this, Step.READY, function () {
+            console.log('Ready Step.');
+            return Step.READY;
+        });
+        s.register(this, Step.PREFLOP, function () {console.log('PreFlop Step.'); return Step.PREFLOP;});
+        s.register(this, Step.FLOP, function () {console.log('Flop Step.'); return Step.FLOP;});
+        s.register(this, Step.TURN, function () {console.log('Turn Step.'); return Step.TURN;});
+        s.register(this, Step.RIVER, function () {console.log('River Step.'); return Step.RIVER;});
+        s.register(this, Step.SHOWDOWN, function () {console.log('Showdown Step.'); return Step.SHOWDOWN;});
 
-    describe('register()', function(){
-        it('각 함수가 등록되어 있어야 한다.', function(){
-            for (var i=Step.READY; i<Step.SHOWDOWN+1; i++) {
-                assert.equal(i, s.stepFn[i]());
-            }
+        describe('register()', function(){
+            it('각 함수가 등록되어 있어야 한다.', function(){
+                for (var i=Step.READY; i<Step.SHOWDOWN+1; i++) {
+                    var r = s.stepFn[i]();
+                    assert.equal(i, r);
+                }
+            });
+        });
+
+        describe('nextStep()', function(){
+            it('스텝 진행이 정확해야 한다.', function(){
+                var i = Step.READY+1;
+                while (Step.READY !== s.proceedNext()) {
+                    assert.equal(i, s.step);
+                    i++;
+                }
+            });
         });
     });
-
-    describe('nextStep()', function(){
-        it('스텝 진행이 정확해야 한다.', function(){
-            var i = Step.READY+1;
-            while (Step.READY !== s.proceedNext()) {
-                assert.equal(i, s.step);
-                i++;
-            }
-        });
-    });
-});
+}

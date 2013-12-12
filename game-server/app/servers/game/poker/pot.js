@@ -231,103 +231,105 @@ pot.split = function () {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Unit test
-var assert = require("assert");
+if (process.env.UNITTEST === 'true') {
+    var assert = require("assert");
 
-describe('Pot', function(){
-    var PLAYER_1 = "1";
-    var PLAYER_2 = "2";
-    var PLAYER_3 = "3";
+    describe('Pot', function(){
+        var PLAYER_1 = "1";
+        var PLAYER_2 = "2";
+        var PLAYER_3 = "3";
 
-    describe('bet()', function(){
-        var testPot = new Pot();
+        describe('bet()', function(){
+            var testPot = new Pot();
 
-        testPot.bet(PLAYER_1, 5, false);
+            testPot.bet(PLAYER_1, 5, false);
 
-        it('베터의 칩과 팟의 베팅 칩이 베팅한 칩으로 설정되어야 한다.', function(){
-            assert.equal(5, testPot.betters[1]);
-            assert.equal(5, testPot.betChip);
-        });
-    });
-
-    describe('call()', function(){
-        var testPot = new Pot();
-
-        testPot.bet(PLAYER_1, 5, false);
-        testPot.call(PLAYER_2, 0, true);
-
-        it('콜한 플레이어의 칩이 팟의 베팅 칩과 같아야한다.', function(){
-            assert.equal(5, testPot.betters[1]);
-            assert.equal(5, testPot.betChip);
+            it('베터의 칩과 팟의 베팅 칩이 베팅한 칩으로 설정되어야 한다.', function(){
+                assert.equal(5, testPot.betters[1]);
+                assert.equal(5, testPot.betChip);
+            });
         });
 
-        it('플레이어가 올인 했을 경우 올인리스트에 추가되어야 한다.', function(){
-            assert.equal(1, testPot.alliners.length);
-        });
-    });
+        describe('call()', function(){
+            var testPot = new Pot();
 
-    describe('fold()', function(){
-        var testPot = new Pot();
-
-        testPot.bet(PLAYER_1, 5, false);
-        testPot.fold(PLAYER_2);
-
-        it('플레이어가 폴드 했을 경우 폴드 리스트에 추가되어야 한다.', function(){
-            assert.equal(0, testPot.folders[PLAYER_2]);
-        });
-    });
-
-    describe('split()', function(){
-        var testPot = new Pot();
-
-        testPot.bet(PLAYER_1, 5, false);
-        testPot.call(PLAYER_3, 0, false);
-
-        it('올인한 플레이어가 없을 경우 팟이 분리되지 말어야 한다.', function(){
-            testPot.split();
-            assert.equal(0, testPot.alliners.length);
-            assert.equal(null, testPot.sidePot);
-            assert.equal(5, testPot.betChip);
-            var pots = [];
-            testPot.pots(pots);
-
-            assert.equal('[{"betChip":5,"betters":{"1":5,"3":5},"folders":{},"alliners":[]}]',
-                JSON.stringify(pots))
-        });
-
-        it('올인한 플레이어가 있지만 베팅 긍액이 같을 경우 팟이 분리되지 않아야 한다.', function(){
+            testPot.bet(PLAYER_1, 5, false);
             testPot.call(PLAYER_2, 0, true);
 
-            testPot.split();
-            assert.equal(1, testPot.alliners.length);
-            assert.equal(null, testPot.sidePot);
-            assert.equal(5, testPot.betChip);
-            var pots = [];
-            testPot.pots(pots);
+            it('콜한 플레이어의 칩이 팟의 베팅 칩과 같아야한다.', function(){
+                assert.equal(5, testPot.betters[1]);
+                assert.equal(5, testPot.betChip);
+            });
 
-            assert.equal('[{"betChip":5,"betters":{"1":5,"2":5,"3":5},"folders":{},"alliners":["2"]}]',
-                JSON.stringify(pots))
+            it('플레이어가 올인 했을 경우 올인리스트에 추가되어야 한다.', function(){
+                assert.equal(1, testPot.alliners.length);
+            });
+        });
+
+        describe('fold()', function(){
+            var testPot = new Pot();
+
+            testPot.bet(PLAYER_1, 5, false);
+            testPot.fold(PLAYER_2);
+
+            it('플레이어가 폴드 했을 경우 폴드 리스트에 추가되어야 한다.', function(){
+                assert.equal(0, testPot.folders[PLAYER_2]);
+            });
+        });
+
+        describe('split()', function(){
+            var testPot = new Pot();
+
+            testPot.bet(PLAYER_1, 5, false);
+            testPot.call(PLAYER_3, 0, false);
+
+            it('올인한 플레이어가 없을 경우 팟이 분리되지 말어야 한다.', function(){
+                testPot.split();
+                assert.equal(0, testPot.alliners.length);
+                assert.equal(null, testPot.sidePot);
+                assert.equal(5, testPot.betChip);
+                var pots = [];
+                testPot.pots(pots);
+
+                assert.equal('[{"betChip":5,"betters":{"1":5,"3":5},"folders":{},"alliners":[]}]',
+                    JSON.stringify(pots))
+            });
+
+            it('올인한 플레이어가 있지만 베팅 긍액이 같을 경우 팟이 분리되지 않아야 한다.', function(){
+                testPot.call(PLAYER_2, 0, true);
+
+                testPot.split();
+                assert.equal(1, testPot.alliners.length);
+                assert.equal(null, testPot.sidePot);
+                assert.equal(5, testPot.betChip);
+                var pots = [];
+                testPot.pots(pots);
+
+                assert.equal('[{"betChip":5,"betters":{"1":5,"2":5,"3":5},"folders":{},"alliners":["2"]}]',
+                    JSON.stringify(pots))
+            });
+        });
+
+        describe('split() 2', function(){
+            var testPot = new Pot();
+
+            testPot.bet(PLAYER_1, 5, false);
+            testPot.call(PLAYER_2, 4, true);
+            testPot.call(PLAYER_3, 3, true);
+
+            it('올인한 플레이어가 여러 명일 경우 팟이 여러 번 분리되어야 한다.', function(){
+                testPot.split();
+                assert.equal(0, testPot.alliners.length);
+                assert.equal(1, testPot.sidePot.alliners.length);
+                assert.equal(1, testPot.betChip);
+                assert.equal(1, testPot.sidePot.betChip);
+                assert.equal(3, testPot.sidePot.sidePot.betChip);
+                var pots = [];
+                testPot.pots(pots);
+
+                assert.equal('[{"betChip":3,"betters":{"1":3,"2":3,"3":3},"folders":{},"alliners":["3"]},{"betChip":1,"betters":{"1":1,"2":1},"folders":{},"alliners":["2"]},{"betChip":1,"betters":{"1":1},"folders":{},"alliners":[]}]',
+                    JSON.stringify(pots))
+            });
         });
     });
-
-    describe('split() 2', function(){
-        var testPot = new Pot();
-
-        testPot.bet(PLAYER_1, 5, false);
-        testPot.call(PLAYER_2, 4, true);
-        testPot.call(PLAYER_3, 3, true);
-
-        it('올인한 플레이어가 여러 명일 경우 팟이 여러 번 분리되어야 한다.', function(){
-            testPot.split();
-            assert.equal(0, testPot.alliners.length);
-            assert.equal(1, testPot.sidePot.alliners.length);
-            assert.equal(1, testPot.betChip);
-            assert.equal(1, testPot.sidePot.betChip);
-            assert.equal(3, testPot.sidePot.sidePot.betChip);
-            var pots = [];
-            testPot.pots(pots);
-
-            assert.equal('[{"betChip":3,"betters":{"1":3,"2":3,"3":3},"folders":{},"alliners":["3"]},{"betChip":1,"betters":{"1":1,"2":1},"folders":{},"alliners":["2"]},{"betChip":1,"betters":{"1":1},"folders":{},"alliners":[]}]',
-                JSON.stringify(pots))
-        });
-    });
-});
+}

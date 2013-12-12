@@ -34,6 +34,20 @@ turn.maxSeatNums = function () {
 };
 
 /**
+ * 자리에 앉은 플레이어 수를 얻는다.
+ * @returns {number}
+ */
+turn.onSeatNums = function () {
+    var n = 0;
+    for (var i=0; i<MAX_SEAT; i++) {
+        if (this.seats[i] !== null) {
+            n++;
+        }
+    }
+    return n;
+};
+
+/**
  * 모든 값들을 초기값으로 되돌린다.
  */
 turn.reset = function () {
@@ -43,6 +57,8 @@ turn.reset = function () {
     this.dealer = -1;
     this.turn = -1;
     this.laster = -1;
+    this.smallBlind = -1;
+    this.bigBlind = -1;
 
     console.log('턴과 관련된 모든 값들을 초기화 함.');
 };
@@ -65,6 +81,23 @@ turn.rotateDealer = function () {
     console.log('다음 딜러는 %j 이다. (턴은 %j, 라스터는 %j)', this.dealer, this.turn, this.laster);
 
     return this.dealer;
+};
+
+/**
+ * Blind Betting을 위한 자리를 설정한다.
+ */
+turn.setBlind = function () {
+    if (this.onSeatNums() < 2) {
+        console.log('자리에 앉은 플레이어 수가 모자란다.(2명 이상이어야 함)');
+        return -1;
+    }
+
+    this.smallBlind = this.next(this.dealer);
+    this.bigBlind = this.next(this.smallBlind);
+
+    console.log('스몰 블라이드는 %j 이고 빅 블라인드는 %j 이다.', this.smallBlind, this.bigBlind);
+
+    return 0;
 };
 
 /**
@@ -234,68 +267,70 @@ turn.prev = function (prevSeat) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Unit test
-var assert = require("assert");
+if (process.env.UNITTEST === 'true') {
+    var assert = require("assert");
 
-describe('Turn', function(){
-    var PLAYER_1 = "1";
-    var PLAYER_2 = "2";
-    var PLAYER_3 = "3";
+    describe('Turn', function(){
+        var PLAYER_1 = "1";
+        var PLAYER_2 = "2";
+        var PLAYER_3 = "3";
 
-    describe('add() & remove()', function(){
-        var turn = new Turn();
-        it('자리에 플레이어들을 추가/삭제 시 -1이 아니어야 한다.', function(){
-            assert.equal(0, turn.add(PLAYER_1, 2));
-            assert.equal(PLAYER_1, turn.seats[2]);
-            assert.equal(2, turn.dealer);
-            assert.equal(2, turn.laster);
-            assert.equal(0, turn.remove(PLAYER_1));
-            assert.equal(null, turn.seats[2]);
-            assert.equal(-1, turn.dealer);
-            assert.equal(-1, turn.laster);
+        describe('add() & remove()', function(){
+            var turn = new Turn();
+            it('자리에 플레이어들을 추가/삭제 시 -1이 아니어야 한다.', function(){
+                assert.equal(0, turn.add(PLAYER_1, 2));
+                assert.equal(PLAYER_1, turn.seats[2]);
+                assert.equal(2, turn.dealer);
+                assert.equal(2, turn.laster);
+                assert.equal(0, turn.remove(PLAYER_1));
+                assert.equal(null, turn.seats[2]);
+                assert.equal(-1, turn.dealer);
+                assert.equal(-1, turn.laster);
 
+            });
+        });
+
+        describe('next() & prev()', function(){
+            var turn = new Turn();
+            it('다음/이전 자리이 확인이 맞아야 한다.', function(){
+                assert.equal(0, turn.add(PLAYER_1, 2));
+                assert.equal(0, turn.add(PLAYER_2, 4));
+                assert.equal(0, turn.add(PLAYER_3, 5));
+
+                assert.equal(4, turn.next(2));
+                assert.equal(5, turn.prev(2));
+                assert.equal(4, turn.prev(5));
+                assert.equal(2, turn.prev(4));
+            });
+        });
+
+        describe('rotateDealer()', function(){
+            var turn = new Turn();
+            it('현제 딜러의 다음 자리가 딜러가 되어야 한다.', function(){
+                assert.equal(0, turn.add(PLAYER_1, 2));
+                assert.equal(0, turn.add(PLAYER_2, 3));
+                assert.equal(0, turn.add(PLAYER_3, 5));
+                assert.equal(2, turn.dealer);
+                assert.equal(3, turn.rotateDealer());
+                assert.equal(3, turn.dealer);
+            });
+        });
+
+        describe('proceedTurn() & isTurnLast()', function(){
+            var turn = new Turn();
+            it('턴 진행처리가 제대로 되어야 한다.', function(){
+                assert.equal(0, turn.add(PLAYER_1, 2));
+                assert.equal(0, turn.add(PLAYER_2, 3));
+                assert.equal(0, turn.add(PLAYER_3, 5));
+
+                assert.equal(2, turn.dealer);
+                assert.equal(2, turn.laster);
+                assert.equal(3, turn.turn);
+                assert.equal(5, turn.proceedTurn());
+                assert.ok(!turn.isTurnLast());
+                assert.equal(2, turn.proceedTurn());
+                assert.ok(turn.isTurnLast());
+            });
         });
     });
-
-    describe('next() & prev()', function(){
-        var turn = new Turn();
-        it('다음/이전 자리이 확인이 맞아야 한다.', function(){
-            assert.equal(0, turn.add(PLAYER_1, 2));
-            assert.equal(0, turn.add(PLAYER_2, 4));
-            assert.equal(0, turn.add(PLAYER_3, 5));
-
-            assert.equal(4, turn.next(2));
-            assert.equal(5, turn.prev(2));
-            assert.equal(4, turn.prev(5));
-            assert.equal(2, turn.prev(4));
-        });
-    });
-
-    describe('rotateDealer()', function(){
-        var turn = new Turn();
-        it('현제 딜러의 다음 자리가 딜러가 되어야 한다.', function(){
-            assert.equal(0, turn.add(PLAYER_1, 2));
-            assert.equal(0, turn.add(PLAYER_2, 3));
-            assert.equal(0, turn.add(PLAYER_3, 5));
-            assert.equal(2, turn.dealer);
-            assert.equal(3, turn.rotateDealer());
-            assert.equal(3, turn.dealer);
-        });
-    });
-
-    describe('proceedTurn() & isTurnLast()', function(){
-        var turn = new Turn();
-        it('턴 진행처리가 제대로 되어야 한다.', function(){
-            assert.equal(0, turn.add(PLAYER_1, 2));
-            assert.equal(0, turn.add(PLAYER_2, 3));
-            assert.equal(0, turn.add(PLAYER_3, 5));
-
-            assert.equal(2, turn.dealer);
-            assert.equal(2, turn.laster);
-            assert.equal(3, turn.turn);
-            assert.equal(5, turn.proceedTurn());
-            assert.ok(!turn.isTurnLast());
-            assert.equal(2, turn.proceedTurn());
-            assert.ok(turn.isTurnLast());
-        });
-    });
-});
+}

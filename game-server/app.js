@@ -13,10 +13,23 @@ var chatRoute = function(session, msg, app, cb) {console.log('App.chatRoute()');
 	}
 
 	var res = dispatcher.dispatch(session.get('rid'), chatServers);
-    console.log(res);
+
 	cb(null, res.id);
 };
 
+// route definition for game server
+var gameRoute = function(session, msg, app, cb) {console.log('App.gameRoute()');
+    var gameServers = app.getServersByType('game');
+
+    if(!gameServers || gameServers.length === 0) {
+        cb(new Error('can not find game servers.'));
+        return;
+    }
+
+    var res = dispatcher.dispatch(session.get('rid'), gameServers);
+
+    cb(null, res.id);
+};
 
 /**
  * Init app for client.
@@ -60,13 +73,13 @@ app.configure('production|development', function() {
 app.configure('production|development', 'chat', function() {
   app.filter(abuseFilter());
 });
-
+/*
 app.configure('production|development', function() {
     // route configures
     app.route('game', gameRoute);
     app.filter(pomelo.timeout());
 });
-
+*/
 //app.registerAdmin(timeReport, {app: app});
 
 // start app

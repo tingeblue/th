@@ -95,52 +95,54 @@ module.exports = (function () {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Unit test
-var assert = require("assert");
+if (process.env.UNITTEST === 'true') {
+    var assert = require("assert");
 
-describe('Distribute', function(){
-    var dist = module.exports;
+    describe('Distribute', function(){
+        var dist = module.exports;
 
-    describe('distribute()', function(){
-        var pots = [{betChip:5,betters:{"1":5,"2":5,"3":5},folders:{},alliners:[]}];
+        describe('distribute()', function(){
+            var pots = [{betChip:5,betters:{"1":5,"2":5,"3":5},folders:{},alliners:[]}];
 
-        it('팟이 하나이고 승자가 하나 일때', function(){
-            var winners = {1:["1"],2:["2","3"]};
-            assert.equal(JSON.stringify(dist.distribute(pots, winners)), '[{"betChip":5,"betters":{"1":5,"2":5,"3":5},"folders":{},"alliners":[],"winners":{"1":15}}]');
+            it('팟이 하나이고 승자가 하나 일때', function(){
+                var winners = {1:["1"],2:["2","3"]};
+                assert.equal(JSON.stringify(dist.distribute(pots, winners)), '[{"betChip":5,"betters":{"1":5,"2":5,"3":5},"folders":{},"alliners":[],"winners":{"1":15}}]');
+            });
+
+            it('팟이 하나이고 승자가 둘 일때', function(){
+                var winners = {1:["1","2"],2:["3"]};
+                assert.equal(JSON.stringify(dist.distribute(pots, winners)), '[{"betChip":5,"betters":{"1":5,"2":5,"3":5},"folders":{},"alliners":[],"winners":{"1":8,"2":7}}]');
+            });
         });
 
-        it('팟이 하나이고 승자가 둘 일때', function(){
-            var winners = {1:["1","2"],2:["3"]};
-            assert.equal(JSON.stringify(dist.distribute(pots, winners)), '[{"betChip":5,"betters":{"1":5,"2":5,"3":5},"folders":{},"alliners":[],"winners":{"1":8,"2":7}}]');
+        describe('distribute()', function(){
+            var pots = [{betChip:5,betters:{"1":5,"2":5,"3":5},folders:{},alliners:["2"]},{betChip:2,betters:{"1":2,"3":2},folders:{},alliners:[]}];
+            var winners = {1:["2"],2:["1"]};
+
+            it('팟이 둘일 때(승자가 올인한 플레이어인 경우)', function(){
+                assert.equal(JSON.stringify(dist.distribute(pots, winners)),
+                    '[{"betChip":5,"betters":{"1":5,"2":5,"3":5},"folders":{},"alliners":["2"],"winners":{"2":15}},{"betChip":2,"betters":{"1":2,"3":2},"folders":{},"alliners":[],"winners":{"1":4}}]');
+            });
+        });
+
+        describe('distribute()', function(){
+            var pots = [{betChip:5,betters:{"1":5,"2":5,"3":5},folders:{},alliners:["2"]},{betChip:2,betters:{"1":2,"3":2},folders:{},alliners:[]}];
+            var winners = {1:["1"],2:["2"]};
+
+            it('승자가 올인한 플레이어가 아닌 경우', function(){
+                assert.equal(JSON.stringify(dist.distribute(pots, winners)),
+                    '[{"betChip":5,"betters":{"1":5,"2":5,"3":5},"folders":{},"alliners":["2"],"winners":{"1":15}},{"betChip":2,"betters":{"1":2,"3":2},"folders":{},"alliners":[],"winners":{"1":4}}]');
+            });
+        });
+
+        describe('distribute()', function(){
+            var pots = [{betChip:5,betters:{"1":5,"2":5},folders:{"3":0},alliners:["2"]},{betChip:2,betters:{"1":2},folders:{},alliners:[]}];
+            var winners = {1:["1"],2:["2"]};
+
+            it('폴드한 플레이어가 있는 경우', function(){
+                assert.equal(JSON.stringify(dist.distribute(pots, winners)),
+                    '[{"betChip":5,"betters":{"1":5,"2":5},"folders":{"3":0},"alliners":["2"],"winners":{"1":10}},{"betChip":2,"betters":{"1":2},"folders":{},"alliners":[],"winners":{"1":2}}]');
+            });
         });
     });
-
-    describe('distribute()', function(){
-        var pots = [{betChip:5,betters:{"1":5,"2":5,"3":5},folders:{},alliners:["2"]},{betChip:2,betters:{"1":2,"3":2},folders:{},alliners:[]}];
-        var winners = {1:["2"],2:["1"]};
-
-        it('팟이 둘일 때(승자가 올인한 플레이어인 경우)', function(){
-            assert.equal(JSON.stringify(dist.distribute(pots, winners)),
-                '[{"betChip":5,"betters":{"1":5,"2":5,"3":5},"folders":{},"alliners":["2"],"winners":{"2":15}},{"betChip":2,"betters":{"1":2,"3":2},"folders":{},"alliners":[],"winners":{"1":4}}]');
-        });
-    });
-
-    describe('distribute()', function(){
-        var pots = [{betChip:5,betters:{"1":5,"2":5,"3":5},folders:{},alliners:["2"]},{betChip:2,betters:{"1":2,"3":2},folders:{},alliners:[]}];
-        var winners = {1:["1"],2:["2"]};
-
-        it('승자가 올인한 플레이어가 아닌 경우', function(){
-            assert.equal(JSON.stringify(dist.distribute(pots, winners)),
-                '[{"betChip":5,"betters":{"1":5,"2":5,"3":5},"folders":{},"alliners":["2"],"winners":{"1":15}},{"betChip":2,"betters":{"1":2,"3":2},"folders":{},"alliners":[],"winners":{"1":4}}]');
-        });
-    });
-
-    describe('distribute()', function(){
-        var pots = [{betChip:5,betters:{"1":5,"2":5},folders:{"3":0},alliners:["2"]},{betChip:2,betters:{"1":2},folders:{},alliners:[]}];
-        var winners = {1:["1"],2:["2"]};
-
-        it('폴드한 플레이어가 있는 경우', function(){
-            assert.equal(JSON.stringify(dist.distribute(pots, winners)),
-                '[{"betChip":5,"betters":{"1":5,"2":5},"folders":{"3":0},"alliners":["2"],"winners":{"1":10}},{"betChip":2,"betters":{"1":2},"folders":{},"alliners":[],"winners":{"1":2}}]');
-        });
-    });
-});
+}
