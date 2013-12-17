@@ -28,6 +28,15 @@ Step.TURN = 3;
 Step.RIVER = 4;
 Step.SHOWDOWN = 5;
 
+Step.STEP_STR = [
+    'READY',
+    'PREFLOP',
+    'FLOP',
+    'TURN',
+    'RIVER',
+    'SHOWDOWN'
+];
+
 var step = Step.prototype;
 
 /**
@@ -56,7 +65,7 @@ step.proceedNext = function () {
     }
 
     if (this.stepFn[this.step]) {
-        console.log('다음 스텝 %j 를 시작한다.', this.step);
+        console.log('다음 스텝 %j 를 시작한다.', Step.STEP_STR[this.step]);
         return this.stepFn[this.step]();
     }
 

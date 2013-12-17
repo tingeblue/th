@@ -48,6 +48,19 @@ player.kick = function () {
 };
 
 /**
+ * 올인 여부 확인
+ * @param chip
+ * @returns {boolean}
+ */
+player.isAllin = function (chip) {
+    if (this.chip - chip > 0) {
+        return false;
+    }
+
+    return true;
+};
+
+/**
  * 칩을 추가 구매함.
  * @param chip
  */

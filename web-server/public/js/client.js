@@ -256,7 +256,7 @@ $(document).ready(function() {
 	});
 
     $("#exitRoom").click(function() {
-        var route = "chat.chatHandler.request";
+        var route = "game.gameHandler.request";
         pomelo.request(route, {
             uid: username,
             content: 'test',
@@ -270,7 +270,7 @@ $(document).ready(function() {
     });
 
     $("#enterRoom").click(function() {
-        var route = "chat.chatHandler.request";
+        var route = "game.gameHandler.request";
         pomelo.request(route, {
             uid: username,
             content: 'test',
@@ -287,32 +287,24 @@ $(document).ready(function() {
     });
 
 	//deal with chat mode.
-	$("#entry").keypress(function(e) {
-		var route = "chat.chatHandler.request";
-		var target = $("#usersList").val();
-		if(e.keyCode != 13 /* Return */ ) return;
-		var msg = $("#entry").attr("value").replace("\n", "");
-		if(!util.isBlank(msg)) {
-			pomelo.request(route, {
-				uid: username,
-                content: msg,
-                payload: {
-                    part: 'game',
-                    method: 'seat',
-                    data:{
-                        chip: '1'
-                    }
+	$("#seat").click(function() {
+		var route = "game.gameHandler.request";
+        pomelo.request(route, {
+            uid: username,
+            content: msg,
+            payload: {
+                part: 'game',
+                method: 'seat',
+                data:{
+                    chip: '1'
                 }
-			}, function(data) {
-				$("#entry").attr("value", ""); // clear the entry field.
-				if(target != '*' && target != username) {
-					addMessage(username, target, msg);
-					$("#chatHistory").show();
-				}
-			});
-		}
+            }
+        }, function(data) {
+            //addMessage(username, target, msg);
+            $("#chatHistory").show();
+        });
 	});
-    /*
+
     $("#entry").keypress(function(e) {
         var route = "chat.chatHandler.send";
         var target = $("#usersList").val();
@@ -333,5 +325,4 @@ $(document).ready(function() {
             });
         }
     });
-    */
 });

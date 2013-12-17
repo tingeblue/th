@@ -166,9 +166,13 @@ table.unseat = function (uid) {
 table.action = function (uid, data) {
     var player = this.players[uid];
     if (player) {
-        var res;
+        var res = 0;
         switch (data.action) {
             case Player.ACTION_BET:
+                res = this.pot.bet(this.uid, data.chip, player.isAllin(data.chip));
+                if (res === 0) {
+                    player.betChip(data.chip);
+                }
                 break;
             case Player.ACTION_RAISE:
                 break;
@@ -187,6 +191,9 @@ table.action = function (uid, data) {
             if (this.turn.isTurnLast()) {
                 this.step.proceedNext();
             }
+            else {
+                this.turn.proceedTurn();
+            }
         }
 
         return 0;
@@ -195,12 +202,27 @@ table.action = function (uid, data) {
     return -1;
 };
 
+/**
+ * 게임 시작
+ */
+table.start = function () {
+    this.step.start();
+};
 
-table.ready = function () {console.log('Table.ready()');
+/**
+ * 게임 준비 단계 처리
+ * - 딜러 선정
+ */
+table.ready = function () {
     this.turn.rotateDealer();
 };
 
-table.preflop = function () {console.log('Table.preflop()');
+/**
+ * 프리플롭 단계 처리
+ * - 블라이드 배팅 진행
+ * - 플레이어 핸즈카드 배분
+ */
+table.preflop = function () {
     this.turn.setBlind();
 
     var msg = {
@@ -212,19 +234,37 @@ table.preflop = function () {console.log('Table.preflop()');
     this.broadcast(this.hostUsername, msg);
 };
 
-table.flop = function () {console.log('Table.flop()');
+/**
+ * 플롭 단계 처리
+ * - 커뮤니티 카드 3장 오픈
+ */
+table.flop = function () {
 
 };
 
-table.turn = function () {console.log('Table.turn()');
+/**
+ * 턴 단계 처리
+ * - 추가 커뮤니티 카드 1장 오픈
+ */
+table.turn = function () {
 
 };
 
-table.river = function () {console.log('Table.river()');
+/**
+ * 리버 단계 처리
+ * - 마지막 커뮤니티 카드 1장 오픈
+ */
+table.river = function () {
 
 };
 
-table.showdown = function () {console.log('Table.showdown()');
+/**
+ * 핸즈를 정리
+ * - 베팅 정리
+ * - 팟 정리
+ * - 칩 배분
+ */
+table.showdown = function () {
 
 };
 
@@ -291,7 +331,7 @@ module.exports = (function () {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Unit test
-if (process.env.UNITTEST === 'true') {
+if (process.env.UNITTEST === 'false') {
     var assert = require("assert");
 
     describe('Table', function(){
@@ -299,24 +339,40 @@ if (process.env.UNITTEST === 'true') {
         var PLAYER_2 = "2";
         var PLAYER_3 = "3";
 
-        var t = new Table(null, 0, 'noname');
-        t.enter(PLAYER_1);
-        t.enter(PLAYER_2);
-        t.seat(PLAYER_1, 1);
-        t.seat(PLAYER_1, 2);
-
         // 두명으로 기본 플레이
-        describe('basic play', function(){
-            t.ready();
-            t.step.start();
+        describe('start()', function(){
+            var t = new Table(null, 0, 'noname');
+            t.enter(PLAYER_1);
+            t.enter(PLAYER_2);
+            t.seat(PLAYER_1, 1);
+            t.seat(PLAYER_1, 2);
 
-            it('자리에 플레이어들을 추가/삭제 시 -1이 아니어야 한다.', function(){
+            t.ready();
+            t.start();
+
+            it('스텝을 시작하면 딜러와 블라인듣르이 설정되어야 한다.', function(){
+                assert.equal(t.turn.dealer, 2);
                 assert.equal(t.turn.smallBlind, 1);
                 assert.equal(t.turn.bigBlind, 2);
             });
         });
 
         // 두명의 플레이하고 체크로 넘어가는 경우
+        describe('action()', function(){
+            var t = new Table(null, 0, 'noname');
+            t.enter(PLAYER_1);
+            t.enter(PLAYER_2);
+            t.seat(PLAYER_1, 1);
+            t.seat(PLAYER_1, 2);
+
+            t.ready();
+            t.start();
+            t.action(PLAYER_1, {action:Player.ACTION_CALL});
+
+            it('스텝을 시작하면 딜러와 블라인듣르이 설정되어야 한다.', function(){
+                assert.equal(t.turn.turn, 2);
+            });
+        });
 
         // 두명이 플레이중 한명이 Fold한 경우
 
